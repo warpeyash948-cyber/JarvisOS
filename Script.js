@@ -169,9 +169,33 @@ if (command.includes("jarvis")) {
 
     } else {
 
-      speak(
-        "Sorry, I do not understand that command yet."
-      );
+      
+speak("Let me think about that.");
+
+const voiceMessage = command;
+
+fetch("https://jarvisos-6m2i.onrender.com/api/chat", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    message: voiceMessage
+  })
+})
+  .then(async (response) => {
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "AI request failed");
+    }
+
+    speak(data.reply);
+  })
+  .catch(() => {
+    speak("Sorry, my AI brain is unavailable right now.");
+  });
+  
     }
   };
 
