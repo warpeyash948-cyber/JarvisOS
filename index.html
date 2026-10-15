@@ -3,38 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>JARVIS OS</title>
-
     <link rel="stylesheet" href="Style.css">
 </head>
-
 <body>
-
     <div class="app">
-
         <h1>JARVIS OS</h1>
 
-        <p id="status">
-            System Ready
-        </p>
-<div class="system-info">
-    <p id="clock">🕒 Loading time...</p>
-    <p id="date">📅 Loading date...</p>
-    <p id="battery">🔋 Checking battery...</p>
-    <p id="network">📶 Checking network...</p>
-</div>
-<div class="jarvis-core">
-    <div class="core-ring"></div>
-    <div class="core-center">AI</div>
-</div>
-        <button id="mic">
+        <p id="status">System Ready</p>
+
+        <div class="system-info">
+            <p id="clock">🕒 Loading time...</p>
+            <p id="date">📅 Loading date...</p>
+            <p id="battery">🔋 Checking battery...</p>
+            <p id="network">📶 Checking network...</p>
+        </div>
+
+        <div class="jarvis-core">
+            <div class="core-ring"></div>
+            <div class="core-center">AI</div>
+        </div>
+
+        <button id="mic" type="button">
             🎙️ Activate JARVIS
         </button>
 
+        <section class="chat-panel">
+            <h2>Talk to JARVIS AI</h2>
+
+            <div id="chatMessages" aria-live="polite">
+                <p><strong>JARVIS:</strong> Hello! How can I help you?</p>
+            </div>
+
+            <form id="chatForm">
+                <input
+                    id="chatInput"
+                    type="text"
+                    placeholder="Ask JARVIS anything..."
+                    maxlength="2000"
+                    autocomplete="off"
+                    required
+                >
+                <button id="sendButton" type="submit">
+                    Send
+                </button>
+            </form>
+        </section>
     </div>
 
     <script src="Script.js"></script>
-
 </body>
 </html>
