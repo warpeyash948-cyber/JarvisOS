@@ -6,6 +6,7 @@ import OpenAI from "openai";
 
 const app = express();
 app.set("trust proxy", 1);
+
 const PORT = process.env.PORT || 3000;
 
 app.disable("x-powered-by");
@@ -36,9 +37,11 @@ app.get("/health", (req, res) => {
 app.post("/api/chat", async (req, res) => {
   const message = req.body?.message;
 
-  if (typeof message !== "string" ||
-      message.trim().length === 0 ||
-      message.length > 2000) {
+  if (
+    typeof message !== "string" ||
+    message.trim().length === 0 ||
+    message.length > 2000
+  ) {
     return res.status(400).json({
       error: "Enter a message up to 2000 characters."
     });
@@ -57,25 +60,28 @@ app.post("/api/chat", async (req, res) => {
 
     const response = await client.responses.create({
       model: "gpt-4.1-mini",
-      instructions: "You are JARVIS, a helpful, clear, friendly personal AI assistant.",
+      instructions:
+        "You are JARVIS, a helpful, clear, friendly personal AI assistant.",
       input: message.trim(),
       max_output_tokens: 500
     });
 
-  
-} catch (error) {
-  console.error("OpenAI error:", {
-    message: error.message,
-    status: error.status,
-    code: error.code
-  });
+    return res.json({
+      reply: response.output_text
+    });
 
-  res.status(502).json({
-    error: "JARVIS could not get a response. Please try again."
-  });
-}
-  res.json({ reply: response.output_text });
+  } catch (error) {
+    console.error("OpenAI error:", {
+      message: error.message,
+      status: error.status,
+      code: error.code
+    });
 
+    return res.status(502).json({
+      error: "JARVIS could not get a response. Please try again."
+    });
+  }
+});
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`JARVIS backend running on port ${PORT}`);
