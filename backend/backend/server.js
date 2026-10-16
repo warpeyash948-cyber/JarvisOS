@@ -5,6 +5,7 @@ import rateLimit from "express-rate-limit";
 import OpenAI from "openai";
 
 const app = express();
+app.set("trust proxy", 1);
 const PORT = process.env.PORT || 3000;
 
 app.disable("x-powered-by");
