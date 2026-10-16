@@ -284,3 +284,62 @@ window.addEventListener("load", () => {
   }, 1000);
 
 });
+
+const chatForm = document.getElementById("chatForm");
+const chatInput = document.getElementById("chatInput");
+const chatMessages = document.getElementById("chatMessages");
+const sendButton = document.getElementById("sendButton");
+
+chatForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const message = chatInput.value.trim();
+  if (!message) return;
+
+  chatMessages.innerHTML +=
+    `<p><strong>You:</strong> ${message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>`;
+
+  chatInput.value = "";
+  sendButton.disabled = true;
+  sendButton.innerText = "Thinking...";
+
+  try {
+    const response = await fetch(
+      "https://jarvisos-6m2i.onrender.com/api/chat",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "AI request failed");
+    }
+
+    const reply = String(data.reply || "I received an empty response.");
+    const paragraph = document.createElement("p");
+    const label = document.createElement("strong");
+    label.textContent = "JARVIS: ";
+    paragraph.appendChild(label);
+    paragraph.appendChild(document.createTextNode(reply));
+    chatMessages.appendChild(paragraph);
+
+  } catch (error) {
+    const paragraph = document.createElement("p");
+    paragraph.textContent =
+      "JARVIS: Sorry, I couldn't connect to my AI brain. Please try again.";
+    chatMessages.appendChild(paragraph);
+    console.error("JARVIS chat error:", error);
+
+  } finally {
+    sendButton.disabled = false;
+    sendButton.innerText = "Send";
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+});
+
