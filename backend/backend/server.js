@@ -62,14 +62,20 @@ app.post("/api/chat", async (req, res) => {
       max_output_tokens: 500
     });
 
-    res.json({ reply: response.output_text });
-  } catch (error) {
-    console.error("AI request failed.");
-    res.status(502).json({
-      error: "JARVIS could not get a response. Please try again."
-    });
-  }
-});
+  
+} catch (error) {
+  console.error("OpenAI error:", {
+    message: error.message,
+    status: error.status,
+    code: error.code
+  });
+
+  res.status(502).json({
+    error: "JARVIS could not get a response. Please try again."
+  });
+}
+  res.json({ reply: response.output_text });
+
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`JARVIS backend running on port ${PORT}`);
