@@ -1,56 +1,150 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JARVIS OS</title>
-    <link rel="stylesheet" href="Style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JARVIS OS</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#050b16;color:#d9f7ff;
+font-family:Arial,sans-serif;min-height:100vh}
+header{text-align:center;padding:22px 10px;color:#42d9ff;
+letter-spacing:5px;font-size:26px;text-shadow:0 0 18px #00bfff}
+.orb{width:105px;height:105px;border:2px solid #25cfff;
+border-radius:50%;margin:8px auto 20px;
+box-shadow:0 0 25px #008cff,inset 0 0 20px #008cff;
+display:grid;place-items:center;font-size:35px}
+#status{text-align:center;color:#70bfff;font-size:13px;margin:10px}
+main{max-width:600px;margin:auto;padding:12px}
+#chat{height:42vh;min-height:220px;overflow-y:auto;
+border:1px solid #164a6b;border-radius:12px;padding:12px;
+background:#071322}
+.msg{padding:10px;margin:8px 0;border-radius:9px;
+white-space:pre-wrap;overflow-wrap:anywhere}
+.user{background:#103650;text-align:right}
+.ai{background:#102332;border:1px solid #17415a}
+form{display:flex;gap:8px;margin-top:12px}
+input{min-width:0;flex:1;background:#0a1928;color:white;
+border:1px solid #246181;border-radius:10px;padding:13px}
+button{background:#00aeea;color:#00111c;border:0;
+border-radius:10px;padding:12px;font-weight:bold}
+.actions{display:flex;gap:10px;margin-top:10px}
+.actions button{flex:1}
+button:disabled{opacity:.5}
+footer{text-align:center;color:#65869a;font-size:12px;padding:18px}
+</style>
 </head>
 <body>
-    <div class="app">
-        <h1>JARVIS OS</h1>
+<header>J.A.R.V.I.S</header>
+<div class="orb">◉</div>
+<div id="status">INITIALIZING SYSTEM...</div>
+<main>
+  <div id="chat" aria-live="polite">
+    <div class="msg ai">JARVIS online. Hello, Sir. How can I help you?</div>
+  </div>
+  <form id="form">
+    <input id="message" placeholder="Ask JARVIS anything..."
+    maxlength="2000" autocomplete="off" required>
+    <button id="send" type="submit">SEND</button>
+  </form>
+  <div class="actions">
+    <button id="mic" type="button">🎙 SPEAK</button>
+    <button id="voice" type="button">🔊 VOICE ON</button>
+  </div>
+</main>
+<footer>JARVIS OS • PERSONAL AI ASSISTANT</footer>
 
-        <p id="status">System Ready</p>
+<script>
+const BACKEND_URL = "PASTE_YOUR_RENDER_URL_HERE";
+const chat = document.getElementById("chat");
+const form = document.getElementById("form");
+const input = document.getElementById("message");
+const send = document.getElementById("send");
+const statusText = document.getElementById("status");
+let voiceOn = true;
 
-        <div class="system-info">
-            <p id="clock">🕒 Loading time...</p>
-            <p id="date">📅 Loading date...</p>
-            <p id="battery">🔋 Checking battery...</p>
-            <p id="network">📶 Checking network...</p>
-        </div>
+function addMessage(text, who) {
+  const div = document.createElement("div");
+  div.className = "msg " + who;
+  div.textContent = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
 
-        <div class="jarvis-core">
-            <div class="core-ring"></div>
-            <div class="core-center">AI</div>
-        </div>
+async function checkBackend() {
+  try {
+    const r = await fetch(BACKEND_URL + "/health");
+    if (!r.ok) throw new Error("Server unavailable");
+    statusText.textContent = "SYSTEM ONLINE • BACKEND CONNECTED";
+  } catch {
+    statusText.textContent = "BACKEND CONNECTION FAILED • CHECK URL";
+  }
+}
 
-        <button id="mic" type="button">
-            🎙️ Activate JARVIS
-        </button>
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const message = input.value.trim();
+  if (!message || send.disabled) return;
 
-        <section class="chat-panel">
-            <h2>Talk to JARVIS AI</h2>
+  addMessage(message, "user");
+  input.value = "";
+  send.disabled = true;
+  statusText.textContent = "JARVIS IS THINKING...";
 
-            <div id="chatMessages" aria-live="polite">
-                <p><strong>JARVIS:</strong> Hello! How can I help you?</p>
-            </div>
+  try {
+    const response = await fetch(BACKEND_URL + "/api/chat", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({message})
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Request failed");
 
-            <form id="chatForm">
-                <input
-                    id="chatInput"
-                    type="text"
-                    placeholder="Ask JARVIS anything..."
-                    maxlength="2000"
-                    autocomplete="off"
-                    required
-                >
-                <button id="sendButton" type="submit">
-                    Send
-                </button>
-            </form>
-        </section>
-    </div>
+    const reply = data.reply || "I couldn't generate a reply.";
+    addMessage(reply, "ai");
+    statusText.textContent = "SYSTEM ONLINE • READY";
 
-    <script src="Script.js"></script>
+    if (voiceOn && "speechSynthesis" in window) {
+      speechSynthesis.cancel();
+      speechSynthesis.speak(new SpeechSynthesisUtterance(reply));
+    }
+  } catch (err) {
+    addMessage("Connection error: " + err.message, "ai");
+    statusText.textContent = "CONNECTION ERROR";
+  } finally {
+    send.disabled = false;
+    input.focus();
+  }
+});
+
+document.getElementById("voice").addEventListener("click", () => {
+  voiceOn = !voiceOn;
+  document.getElementById("voice").textContent =
+    voiceOn ? "🔊 VOICE ON" : "🔇 VOICE OFF";
+  if (!voiceOn && "speechSynthesis" in window) speechSynthesis.cancel();
+});
+
+document.getElementById("mic").addEventListener("click", () => {
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    alert("Voice input isn't supported in this browser. Try Chrome.");
+    return;
+  }
+  const recognition = new SpeechRecognition();
+  recognition.lang = "en-IN";
+  recognition.onresult = (event) => {
+    input.value = event.results[0][0].transcript;
+    form.requestSubmit();
+  };
+  recognition.onerror = () => {
+    statusText.textContent = "MICROPHONE ERROR • TRY AGAIN";
+  };
+  recognition.start();
+});
+
+checkBackend();
+</script>
 </body>
 </html>
